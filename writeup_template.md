@@ -82,6 +82,17 @@ Such improvements have helped to make better line detection on challenge video.
 
 ### 3. Shortcomings and potential improvements
 
-A possible improvement would be to ...
+Shortcomings:  
+1) When we select region of interest we assume that lines are in particular area of the image. That requires the camera to be always positioned in the front center of the car
+2) We tested the algorithm on the videos and images with relatively similar brightness and similar color of the lines. We might have problems at night or duting rainy weather when brightness is not as high.
+3) Algorithm works on the road with perfectly draw lane lines. However that is not the case in all the roads. Sometimes lane lines are old and not very visible. Sometimes there are some other random lines drawn on the road maybe bnecause of the construction.
+4) We select lines after hough transform using some specific line slopes. That requires the camera to be similarly calibrated and similarly positioned to the test images. Different camera calibrartion or different camera position might cause problems.
+5) In the traffic lane lines might be not visible at all because of other cars in front. That will caues problems detecting lines.
+6) In the video it is visible that lane lines detection is shaky. It would be better if lanes would always be stable.
+7) Our algorithm draws straight lines and doesn't detect the curve of the road
 
-Another potential improvement could be to ...
+Possible improvements:
+1) To stabilize lines in the video we could average results from previous video frames.
+2) We could fit the polynomial of higher order to detect the curve of the road. Also potentially we could run hough transform which detects curvy lines.
+3) In case no lines are detected we can just fallback to resutls from previous video frames to increase the probablity of line detection.
+4) Would be great to build machine learning model which would allow to tune the parameters for hough transoform, canny edge detection, slopes of the left and right lines. For that we would require some training set of images with correctly detected lines.
