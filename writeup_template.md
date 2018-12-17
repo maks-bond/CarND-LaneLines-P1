@@ -1,46 +1,86 @@
 # **Finding Lane Lines on the Road** 
 
-## Writeup Template
-
-### You can use this file as a template for your writeup if you want to submit it as a markdown file. But feel free to use some other method and submit a pdf if you prefer.
-
----
-
-**Finding Lane Lines on the Road**
-
-The goals / steps of this project are the following:
-* Make a pipeline that finds lane lines on the road
-* Reflect on your work in a written report
-
-
 [//]: # (Image References)
 
-[image1]: ./examples/grayscale.jpg "Grayscale"
+[image1]: ./examples/1.jpg "1"
+[image2]: ./examples/2.jpg "2"
+[image3]: ./examples/3.jpg "3"
+[image4]: ./examples/4.jpg "4"
+[image5]: ./examples/5.jpg "5"
+[image6]: ./examples/6.jpg "6"
+[image7]: ./examples/7.jpg "7"
+[image8]: ./examples/8.jpg "8"
+[image9]: ./examples/9.jpg "9"
+[image10]: ./examples/10.jpg "10"
 
 ---
 
 ### Reflection
 
-### 1. Describe your pipeline. As part of the description, explain how you modified the draw_lines() function.
+### 1. Pipeline description
 
-My pipeline consisted of 5 steps. First, I converted the images to grayscale, then I .... 
+The pipeline to draw lane lines on an image consists of the following steps:
+1) Select region of interest where lane lines are likely to be in an image    
+![image1]
+2) Convert an image to grayscale.
+This step involves conversion of an image to HSV format.
+Then we split HSV image into three layers and work with last 'Value' layer.
+![image2]
+We normalize it to span [0, 255] range and apply mask to select areas with high luminosity.
+Such an algorithm of image conversion to grayscale was created to solve 'challenge' video which has areas with a lot of light and such areas caused problems when using normal RGB to Gray conversion. See below for more details on challenges with 'challenge' video.  
+3) Blur grayscale image obtained from step 2 with 5X5 gaussian kernel.
+![image3]
+4) Apply canny edge detector with lowe threshold of 150 and high threshold of 300. Such arguments have been tuned based on experimentation on some images.  
+![image4]
 
-In order to draw a single line on the left and right lanes, I modified the draw_lines() function by ...
+5) Apply houhg transform to get lines  
+![image5]
 
-If you'd like to include images to show how the pipeline works, here is how to include an image: 
-
-![alt text][image1]
-
-
-### 2. Identify potential shortcomings with your current pipeline
+6) Filter out lines to preserve only those which have slope appropriate to left and right line. The slope for left line is around 0.67 and the slope for right line is around -0.67. Such slope values have been tuned during experimentation.  
 
 
-One potential shortcoming would be what would happen when ... 
+7) If there are some lines for left and right lane. Find top and bottom points for such lines. Top point is selected as intersection of left and right lines. Bottom point is just in the bottom of the image.  
+![image6]
 
-Another shortcoming could be ...
+### 2. Improvements for diffenet levels of brightness
+Originally the pipeline was implemented in the same way as above, however step #2 was implemented as simple RGB to Gray conversion.  
+First and second test videos have produced good result of lane lines detecion. However challenge video showed some problems.  
+In particular images with high brightness failed to detect lane lines. Challenge video has such images in the middle of the video.  
+
+Such problem was solved in the following way:  
+process_image function was extended to save an image whcih failed lane lines detection.
+Then such images have been used to analyze the reason for the failure.  
+Different ways of color image to gray conversion have been tried: 
+* Selection of different color channels (red, green or blue)
+* Conversion of an image to LAB color space and using each layer.
+* Conversion of an image to YCrCb color space and using each layer.
+* Conversion of an image to HSV color space and using each layer.
+
+As a reasult of such experiments last layer of HSV color space showed the best results. It was visible when looking at gray scale image of that layer that lane lines have different color value comparing to its background.
+Also to make edge detection even more robust, range mask was applied to select values in the [215, 255] range.
+It seems like lane lines yellow or white have higher brightness in all the images whcih explains the success of such approach.  
+Here are some image examples:  
+1) Image which failed line detection with normal RGB to GRAY conversion: 
+![image7]  
+2) Pure Grayscale version:
+![image8]
+
+As you can see the lane lines (especially yellow) have very similar pixel values to its background, which fails edge detection.
+The reason is that in this image there is high brightness of the road which makes gray values of the road and yellow lane look similar.  
+  
+3) 'Value' channel of HSV color space:  
+![image9]
+As you can see such grayscale image is much better as left yellow line has  much better contrast with the road which wlould cause to have higher gradient during canny edge detection.  
+  
+4) Masked HSV 'Value' channel:  
+![image10]
+
+It was observed that lanes have high brightness, as a result after application of a mask, the lanes are seen to be distinct from the road which makes line detection even more robust.  
+
+Such improvements have helped to make better line detection on challenge video.
 
 
-### 3. Suggest possible improvements to your pipeline
+### 3. Shortcomings and potential improvements
 
 A possible improvement would be to ...
 
